@@ -1,0 +1,3 @@
+rootProject.name = 'Structural_RN'
+
+include ':app'
