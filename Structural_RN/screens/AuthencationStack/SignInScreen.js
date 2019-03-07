@@ -1,5 +1,9 @@
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, Image, Dimensions, ActivityIndicator, ScrollView, AsyncStorage, TouchableHighlight, TextInput, TouchableOpacity } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native';
+import firebase from '../../Firebase'
+import { LoginButton } from 'react-native-fbsdk';
+
 
 const SCREEN_SIZE = Dimensions.get('window')
 
@@ -7,22 +11,39 @@ export default class SignInScreen extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            isShowHud: false
+            isShowHud: false,
+            email: '',
+            password: ''
         }
     }
 
-    _onSignIn = async () => {
+    static navigationOptions = {
+        title: 'Sign In'
+    }
+
+    _onSignIn = () => {
+        let { email, password } = this.state
+
         this.setState({ isShowHud: !this.state.isShowHud })
-        await AsyncStorage.setItem('userToken', 'abc')
-        setTimeout(() => {
+
+        firebase.auth().signInWithEmailAndPassword(email, password).then((response) => {
+            this._onSignInSuccess(response.user.uid)
+        }).catch((error) => {
+            console.log(error)
             this.setState({ isShowHud: !this.state.isShowHud })
+        })
+    }
+
+    _onSignInSuccess = async (res) => {
+        await AsyncStorage.setItem('userToken', res).then(() => {
             this.props.navigation.navigate('App')
-        }, 3000)
+        })
     }
 
     render() {
         return (
-            <ScrollView>
+            <ScrollView contentContainerStyle = {{height: SCREEN_SIZE.height}}>
+                <KeyboardAvoidingView style={styles.container} behavior="padding" enabled>
                     <View style={styles.content}>
                         <View style={{
                             flex: 1,
@@ -51,6 +72,10 @@ export default class SignInScreen extends Component {
                                         borderBottomColor: 'white',
                                         borderBottomWidth: 0.5
                                     }}
+                                    value={this.state.email}
+                                    onChangeText={(text) => {
+                                        this.setState({ email: text })
+                                    }}
                                     placeholder='EMAIL'
                                     placeholderTextColor='white'
                                     keyboardType={'email-address'}
@@ -71,6 +96,10 @@ export default class SignInScreen extends Component {
                                         borderBottomWidth: 0.5
                                     }}
                                     placeholder='PASSWORD'
+                                    value={this.state.password}
+                                    onChangeText={(password) => {
+                                        this.setState({ password: password })
+                                    }}
                                     placeholderTextColor='white'
                                     secureTextEntry={true}
                                 />
@@ -127,6 +156,7 @@ export default class SignInScreen extends Component {
                         style={{ width: SCREEN_SIZE.width, height: SCREEN_SIZE.height }}
                         source={{ uri: 'https://images.pexels.com/photos/1156684/pexels-photo-1156684.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }}
                     />
+                </KeyboardAvoidingView>
             </ScrollView>
         )
     }
@@ -158,16 +188,22 @@ const otherLogin = () => {
                 }}
             >
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                    <Image
-                        style={{ width: 20, height: 20 }}
-                        source={{ uri: 'http://clipart-library.com/images/di45nGk5T.jpg' }}
-                    />
-                    <Text style={{
-                        color: 'white',
-                        fontSize: 25,
-                        padding: 10,
-                        fontWeight: 'bold'
-                    }}>LOG IN WITH FACEBOOK</Text>
+                    <View>
+                        <LoginButton
+                            publishPermissions={["email"]}
+                            onLoginFinished={
+                                (error, result) => {
+                                    if (error) {
+                                        alert("Login failed with error: " + error.message);
+                                    } else if (result.isCancelled) {
+                                        alert("Login was cancelled");
+                                    } else {
+                                        alert("Login was successful with permissions: " + result.grantedPermissions)
+                                    }
+                                }
+                            }
+                            onLogoutFinished={() => alert("User logged out")} />
+                    </View>
                 </View>
             </TouchableHighlight>
         </View>

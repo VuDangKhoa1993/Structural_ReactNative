@@ -6,6 +6,21 @@ export default class WelcomeScreen extends Component {
         super(props)
     }
 
+    static navigationOptions = {
+        title: 'Welcome to the App',
+        headerStyle: {
+            backgroundColor: 'whites'
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+            fontWeight: 'bold',
+            fontSize: 30,
+            color: 'orange',
+            flex: 1,
+            textAlign: 'center'
+        }
+      }
+
     render() {
         return (
             <View style={styles.container}>
